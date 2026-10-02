@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+/pnp*
+
+# Testing
+coverage/
+
+# Production
+build/
+
+# Misc
+.DS_Thumb
+.env
+.env.local
+.env.*.local
+credentials.json
+*.log
+
+# npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/settings.json
+.vscode/*.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.komodoproject
+
+# OS generated files
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Google credentials
+credentials.json
+service-account.json
+*.json
+
+# Logs
+logs
+*.log
