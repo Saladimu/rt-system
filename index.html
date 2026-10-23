@@ -429,10 +429,11 @@
                         <i class="fa-solid fa-print"></i>
                     </button>
                 </div>
-                <button onclick="openModal('modal-warga')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm transition flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-user-plus"></i>
-                    <span>Tambah Data Warga</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-lg bg-slate-100 text-slate-500 border border-slate-200">
+                        <i class="fa-solid fa-lock"></i> Read-only (RW)
+                    </span>
+                </div>
             </div>
 
             <!-- Filter & Search Controls -->
@@ -489,10 +490,11 @@
                 <div>
                     <h2 class="text-2xl font-bold text-slate-800" data-rt="kasTitle">Iuran &amp; Kas</h2>
                 </div>
-                <button onclick="openModal('modal-kas')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm transition flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-plus-circle"></i>
-                    <span>Catat Transaksi Kas</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-lg bg-slate-100 text-slate-500 border border-slate-200">
+                        <i class="fa-solid fa-lock"></i> Read-only (RW)
+                    </span>
+                </div>
             </div>
 
             <!-- Kas Cards Balance Overview -->
@@ -500,7 +502,9 @@
                 <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
                     <div class="flex items-center justify-between">
                         <p class="text-xs text-slate-500 font-semibold uppercase">Saldo Awal</p>
-                        <button type="button" onclick="openSaldoAwalModal()" class="text-slate-400 hover:text-emerald-600 p-1 rounded" title="Ubah saldo awal"><i class="fa-solid fa-pen"></i></button>
+                        <span id="saldo-awal-edit-btn" class="hidden">
+                            <button type="button" onclick="openSaldoAwalModal()" class="text-slate-400 hover:text-emerald-600 p-1 rounded" title="Ubah saldo awal"><i class="fa-solid fa-pen"></i></button>
+                        </span>
                     </div>
                     <p id="saldo-awal-kas" class="text-xl font-bold text-slate-700 mt-1">Rp 0</p>
                 </div>
@@ -2547,6 +2551,28 @@
             localStorage.setItem('rt_local_deletes_' + type, JSON.stringify(localDeletes[type]));
         }
 
+        // ===== READ-ONLY POLICY (level RW) =====
+        // RW 06 dapat Membaca, tetapi tidak Menambah/Ubah/Menghapus data pada
+        // sheet tertentu. Secara default, Data_Warga & Iuran_Kas bersifat
+        // read-only (kelola di level RT). Sheet Surat/Lapor/Pengumuman/Kegiatan
+        // tetap bisa dikelola di RW. Daftar ini dapat dikonfigurasi lewat
+        // RW_CONFIG.readOnlySheets (jika ada).
+        function isReadOnly(sheetName) {
+            var cfg = (typeof window !== 'undefined' ? (window.RW_CONFIG || window.RT_CONFIG || {}) : {});
+            var extra = Array.isArray(cfg.readOnlySheets) ? cfg.readOnlySheets : [];
+            var ro = ['Data_Warga', 'Iuran_Kas'].concat(extra);
+            return ro.indexOf(sheetName) !== -1;
+        }
+
+        // Tampilkan / sembunyikan kontrol aksi sesuai kebijakan read-only.
+        function applyReadOnlyUI() {
+            var btn;
+            // Tombol "Tambah Data Warga" & "Catat Transaksi Kas" sudah disembunyikan
+            // di markup (hanya tombol lock yang tampil); kontrol ini sebagai fallback.
+            btn = document.getElementById('saldo-awal-edit-btn');
+            if (btn) btn.classList.toggle('hidden', isReadOnly('Iuran_Kas'));
+        }
+
         function trackLocalDelete(type, item) {
             const sig = getSignature(type, item);
             if (sig && !localDeletes[type].includes(sig)) {
@@ -2613,6 +2639,7 @@
             initShowArchivedLapor();
             initWargaSort();
             populateRtFilter();
+            applyReadOnlyUI();
             renderWargaTable();
             initKasView();
             renderKasTable();
@@ -4510,6 +4537,7 @@
         // Form Submit Handlers
         function submitWarga(e) {
             e.preventDefault();
+            if (isReadOnly('Data_Warga')) { showToast('Data Warga bersifat read-only di level RW. Kelola di halaman RT.', 'error'); return; }
             const data = {
                 sheetName: "Data_Warga",
                 rt: document.getElementById('warga-rt').value,
@@ -4581,6 +4609,7 @@
 
         function submitKas(e) {
             e.preventDefault();
+            if (isReadOnly('Iuran_Kas')) { showToast('Iuran & Kas bersifat read-only di level RW. Kelola di halaman RT.', 'error'); return; }
             const jumlah = Number(document.getElementById('kas-jumlah').value);
             if (!(jumlah > 0)) {
                 showToast('Jumlah nominal harus lebih dari 0.', 'error');
@@ -4727,6 +4756,7 @@
 
         // Edit Functions
         function editWarga(index) {
+            if (isReadOnly('Data_Warga')) { showToast('Data Warga bersifat read-only di level RW.', 'error'); return; }
             const item = appState.warga[index];
             if (!item) return;
             if (!item._id) { item._id = newId(); saveLocalState(); }
@@ -4755,6 +4785,7 @@
         // Ubah Saldo Awal kas (nilai dasar perhitungan saldo akhir:
         // Saldo Akhir = Saldo Awal + Pemasukan - Pengeluaran).
         function openSaldoAwalModal() {
+            if (isReadOnly('Iuran_Kas')) { showToast('Iuran & Kas bersifat read-only di level RW. Saldo Awal tidak dapat diubah.', 'error'); return; }
             const input = document.getElementById('saldo-awal-input');
             if (input) input.value = String(Number(appState.saldoAwal) || 0);
             openModal('modal-saldo-awal');
@@ -4790,6 +4821,7 @@
         }
 
         function editKas(index) {
+            if (isReadOnly('Iuran_Kas')) { showToast('Iuran & Kas bersifat read-only di level RW.', 'error'); return; }
             const item = appState.kas[index];
             if (!item) return;
             if (!item._id) { item._id = newId(); saveLocalState(); }
@@ -4911,6 +4943,7 @@
         }
 
         function archiveWarga(index) {
+            if (isReadOnly('Data_Warga')) { showToast('Data Warga bersifat read-only di level RW.', 'error'); return; }
             const item = appState.warga[index];
             if (!item) return;
             const lines = 'Nama: ' + (item.nama || '-')
@@ -4929,6 +4962,7 @@
         }
 
         function restoreWarga(index) {
+            if (isReadOnly('Data_Warga')) { showToast('Data Warga bersifat read-only di level RW.', 'error'); return; }
             const item = appState.warga[index];
             if (!item) return;
             const lines = 'Nama: ' + (item.nama || '-')
@@ -4950,6 +4984,7 @@
         // dengan arah berlawanan, sehingga pasangan (asal + reversal) berjumlah nol.
         // Transaksi asal tetap tersimpan dan tetap tampil dengan badge "Dibatalkan".
         function reverseKas(index) {
+            if (isReadOnly('Iuran_Kas')) { showToast('Iuran & Kas bersifat read-only di level RW.', 'error'); return; }
             const item = appState.kas[index];
             if (!item) return;
             // Kolom "Reversal Dari" hanya dikenal backend v28+. Cegah pembatalan
@@ -5012,6 +5047,7 @@
 
         // Pulihkan pembatalan = hapus hanya baris reversal (transaksi asal kembali dihitung).
         function unreverseKas(index) {
+            if (isReadOnly('Iuran_Kas')) { showToast('Iuran & Kas bersifat read-only di level RW.', 'error'); return; }
             const item = appState.kas[index];
             if (!item) return;
             const rev = kasReversalFor(item);
@@ -5029,6 +5065,7 @@
         }
 
         function deleteKasReversal(index, opts) {
+            if (isReadOnly('Iuran_Kas')) { showToast('Iuran & Kas bersifat read-only di level RW.', 'error'); return; }
             const item = appState.kas[index];
             if (!item || !isKasReversal(item)) return;
             opts = opts || {};

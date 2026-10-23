@@ -729,6 +729,15 @@ function doPost(e) {
       return respond({ "result": "error", "message": "sheetName tidak dikenal: " + sheetName });
     }
 
+    // Kebijakan read-only level RW: Data_Warga & Iuran_Kas tidak bisa
+    // ditambah/ubah/hapus lewat RW (hanya di level RT). Ini berlaku untuk
+    // action add/update/delete. Action read/readPublic tetap diperbolehkan.
+    var readOnlySheets = ['Data_Warga', 'Iuran_Kas'];
+    var action = data.action || 'add';
+    if (readOnlySheets.indexOf(sheetName) !== -1 && (action === 'add' || action === 'update' || action === 'delete')) {
+      return respond({ "result": "error", "code": "read_only", "message": sheetName + " bersifat read-only di level RW. Kelola di halaman RT masing-masing." });
+    }
+
     // Semua operasi tulis (add/update/delete) wajib menyertakan token admin.
     if (!isAuthorized(data.token)) {
       return respond(unauthorized());
