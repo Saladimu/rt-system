@@ -590,7 +590,28 @@ function readAllSheets(rtFilter) {
 
     ensureSpreadsheetFormat(ss, sheet, name);
     var rows = ensureIds(sheet, name);
-    var formatted = formatSheetRows(rows, formats[name]);
+
+    // Legacy support: jika Data_Warga tidak punya kolom RT (skema lama SAPA-RT),
+    // injekkan RT='017' ke semua record agar filter per-RT tetap berfungsi.
+    var hasRt = true;
+    if (name === 'Data_Warga') {
+      var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      hasRt = headers.indexOf('RT') !== -1;
+      if (!hasRt) {
+        rows = rows.map(function (row) {
+          // Sisipkan '017' di posisi index 1 (setelah Timestamp)
+          return [row[0], '017'].concat(row.slice(1));
+        });
+      }
+    }
+
+    // Format kolom tanggal dengan memperhatikan apakah kolom RT ada atau tidak
+    var fmt = formats[name];
+    if (name === 'Data_Warga' && !hasRt) {
+      // Skema lama: Tanggal Lahir di index 7 (bukan 8)
+      fmt = { 7: "yyyy-MM-dd" };
+    }
+    var formatted = formatSheetRows(rows, fmt);
 
     // Terapkan filter per-RT pada semua sheet kecuali Data_RT (registry RW-level).
     if (rtTarget && name !== 'Data_RT' && RT_COLUMN_INDEX[name] !== undefined) {
