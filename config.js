@@ -62,7 +62,7 @@ window.RW_CONFIG = {
     // Salin URL Web App (yang berakhiran /exec) di sini agar public.html dapat
     // diakses cukup lewat "public.html" tanpa parameter ?url=...
     // Kosongkan ('') untuk memakai parameter ?url=... (kompatibilitas lama).
-    publicApiUrl: 'https://script.google.com/macros/s/AKfycbxM0At99NcmfzggsL1QnXDUBlBWRpFJTs5zlQHQqgOlZOXk9QblLrFCJSNYwEw8CXC1hA/exec',
+    publicApiUrl: 'https://script.google.com/macros/s/AKfycbyHC3GsCAEhjuQRq_tNcbV5AiE2-j1l5jHF9inujTP-ASgnZMjK-fSxy425ImU4Hv7S/exec',
 
     // Path proxy same-origin (Cloudflare Pages Function, lihat folder `functions/`).
     // Dipakai sebagai jalur utama request ke Apps Script supaya browser tidak
