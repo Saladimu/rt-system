@@ -70,14 +70,14 @@ window.RW_CONFIG = {
     // pihak ketiga/ITP/ekstensi yang membuat JSONP gagal). Bila proxy tidak
     // tersedia (mis. pratinjau lokal), aplikasi otomatis jatuh ke publicApiUrl.
     // Kosongkan ('') untuk selalu memakai publicApiUrl (URL langsung).
-    apiBase: '/api',
+    apiBase: '',
 
     // URL halaman Portal Publik yang dibagikan ke warga. Satu domain dengan
     // admin (akses admin dikunci Cloudflare Access pada path "/" & "/index.html",
     // sedangkan "/public" + aset publik di-bypass). Contoh:
     // https://sapa-rw06.pages.dev/public
     // Kosongkan ('') untuk memakai public.html lokal (atau ?url=... bila publicApiUrl kosong).
-    publicPortalUrl: '',
+    publicPortalUrl: 'https://saladimu.github.io/rt-system/public',
 
     // Daftar pilihan "Jenis Surat" pada fitur Pengajuan Surat. Dipakai oleh
     // index.html (admin) & public.html (form warga) agar seragam. Backend
